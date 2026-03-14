@@ -1,0 +1,21 @@
+{
+  "name": "Wasim EMI & Loan Tool",
+  "short_name": "Wasim EMI",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a84ff",
+  "description": "EMI, Tenure, and FD vs Loan calculators with export & multilingual support.",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
