@@ -102,6 +102,67 @@ export async function exportElementToPDF(domElement, fileName, buildSummaryPage)
 }
 
 /**
+ * Reusable function to export a table to PDF using jspdf-autotable.
+ * @param {Array} columns - Array of column titles e.g. ["Month", "EMI"]
+ * @param {Array} rows - Array of arrays for table data
+ * @param {String} fileName - The desired PDF filename
+ * @param {String} title - the title text for the pdf
+ * @param {Array} summaryData - optional array of arrays for the top summary
+ */
+export async function exportDataToPDF(columns, rows, fileName, title = 'Report', summaryData = null) {
+    try {
+        const { jsPDF } = await import('jspdf');
+        await import('jspdf-autotable');
+
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+
+        // Add Title
+        pdf.setFontSize(20);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(title, pdfWidth / 2, 40, { align: 'center' });
+
+        let startY = 60;
+
+        // Add Summary List if provided
+        if (summaryData) {
+            pdf.autoTable({
+                startY: startY,
+                body: summaryData,
+                theme: 'plain',
+                styles: { fontSize: 11, cellPadding: 3 },
+                columnStyles: {
+                    0: { fontStyle: 'bold', halign: 'right', cellWidth: 150 },
+                    1: { halign: 'left' }
+                },
+                margin: { left: pdfWidth / 2 - 120 }
+            });
+            startY = pdf.lastAutoTable.finalY + 20;
+        }
+
+        // Add Data Table
+        if (rows && rows.length > 0) {
+            pdf.autoTable({
+                startY: startY,
+                head: [columns],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [0, 122, 255] },
+                styles: { fontSize: 10, cellPadding: 5, halign: 'center' },
+                didDrawPage: (data) => {
+                    addWatermark(pdf);
+                }
+            });
+        }
+
+        pdf.save(fileName);
+    } catch (err) {
+        console.error('PDF table export failed:', err);
+        alert('Failed to generate export: ' + err.message);
+    }
+}
+
+/**
  * Reusable function to export a 2D array or array of objects to Excel.
  * @param {Array} data - Array of arrays OR array of objects
  * @param {String} fileName - Desired output filename
@@ -109,16 +170,32 @@ export async function exportElementToPDF(domElement, fileName, buildSummaryPage)
  * @param {String} mode - 'aoa' (array of arrays) or 'json' (array of objects)
  */
 export async function exportDataToExcel(data, fileName, sheetName, mode = 'aoa') {
-    const XLSX = await import('xlsx');
-    
-    let ws;
-    if (mode === 'json') {
-        ws = XLSX.utils.json_to_sheet(data);
-    } else {
-        ws = XLSX.utils.aoa_to_sheet(data);
+    try {
+        const ExcelJS = await import('exceljs');
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet(sheetName);
+
+        if (mode === 'json') {
+            if (data && data.length > 0) {
+                const keys = Object.keys(data[0]);
+                worksheet.columns = keys.map(key => ({ header: key, key: key }));
+                data.forEach(row => worksheet.addRow(row));
+            }
+        } else {
+            // Mode aoa (Array of Arrays)
+            data.forEach(row => worksheet.addRow(row));
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error('Excel export failed:', err);
+        alert('Failed to export to Excel: ' + err.message);
     }
-    
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    XLSX.writeFile(wb, fileName);
 }

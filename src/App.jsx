@@ -7,6 +7,7 @@ import TenureCalculator from './components/calculators/TenureCalculator';
 import FDvsLoan from './components/calculators/FDvsLoan';
 import MutualFundCalculator from './components/calculators/MutualFundCalculator';
 import FinancialAdvisor from './components/advisor/FinancialAdvisor';
+import GlobalSearch from './components/common/GlobalSearch';
 
 const COLORS = {
   light: {
@@ -204,7 +205,7 @@ function ToolCard({ tool, theme, onSelect }) {
   );
 }
 
-function HomePage({ theme, setSection }) {
+function HomePage({ theme, setSection, onOpenSearch }) {
   return (
     <div>
       {/* Hero */}
@@ -269,6 +270,42 @@ function HomePage({ theme, setSection }) {
         </div>
       </div>
 
+      {/* Big Search Box */}
+      <div style={{ maxWidth: 640, margin: '0 auto 48px auto', padding: '0 20px' }}>
+        <div 
+          onClick={onOpenSearch}
+          style={{
+            display: 'flex', alignItems: 'center',
+            background: theme.card,
+            border: `2px solid ${theme.border.split(' ').slice(2).join(' ')}`,
+            borderRadius: 30,
+            padding: '16px 24px',
+            cursor: 'text',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.08)',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+          }}
+          onMouseOver={e => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 16px 40px rgba(0,0,0,0.12)';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.08)';
+          }}
+        >
+          <span style={{ fontSize: 24, marginRight: 16 }}>🔍</span>
+          <div style={{ flex: 1, color: theme.subtleText, fontSize: 18, fontWeight: 500 }}>
+            Search for your calculator or Utility
+          </div>
+          <div style={{ 
+            background: 'rgba(128,128,128,0.1)', padding: '6px 12px', 
+            borderRadius: 8, fontSize: 13, fontWeight: 600, color: theme.subtleText
+          }}>
+            ⌘K
+          </div>
+        </div>
+      </div>
+
       {/* Divider */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32,
@@ -304,12 +341,25 @@ function HomePage({ theme, setSection }) {
 export default function App() {
   const [dark, setDark] = useState(false);
   const [section, setSection] = useState('home');
+  const [searchOpen, setSearchOpen] = useState(false);
   const theme = dark ? COLORS.dark : COLORS.light;
 
   React.useEffect(() => {
+    // Save original styles
+    const originalBackground = document.body.style.background;
+    const originalColor = document.body.style.color;
+    const originalMargin = document.body.style.margin;
+
     document.body.style.background = dark ? '#0f0f17' : '#f0f4ff';
     document.body.style.color = theme.text;
     document.body.style.margin = '0';
+
+    // Cleanup
+    return () => {
+      document.body.style.background = originalBackground;
+      document.body.style.color = originalColor;
+      document.body.style.margin = originalMargin;
+    };
   }, [dark, theme.text]);
 
   const isHome = section === 'home';
@@ -328,6 +378,14 @@ export default function App() {
         setSection={setSection}
         dark={dark}
         setDark={setDark}
+        onOpenSearch={() => setSearchOpen(true)}
+      />
+
+      <GlobalSearch 
+        theme={theme}
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelect={setSection}
       />
 
       <main style={{
@@ -379,7 +437,7 @@ export default function App() {
 
         {/* Content */}
         <div style={{ position: 'relative', zIndex: 1 }}>
-          {isHome && <HomePage theme={theme} setSection={setSection} />}
+          {isHome && <HomePage theme={theme} setSection={setSection} onOpenSearch={() => setSearchOpen(true)} />}
           {section === 'emi' && <EMICalculator theme={theme} />}
           {section === 'prepayment' && <PrepaymentCalculator theme={theme} />}
           {section === 'tenure' && <TenureCalculator theme={theme} />}

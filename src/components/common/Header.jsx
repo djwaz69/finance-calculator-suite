@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import logo from '../../assets/logo.jpg';
 
-export default function Header({ theme, sections, section, setSection, dark, setDark }) {
+export default function Header({ theme, sections, section, setSection, dark, setDark, onOpenSearch }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -64,6 +64,18 @@ export default function Header({ theme, sections, section, setSection, dark, set
 
         {/* Desktop Nav */}
         <div className="header-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          {/* Search Button */}
+          <button
+            onClick={onOpenSearch}
+            style={{
+              background: 'rgba(128,128,128,0.1)',
+              border: 'none', borderRadius: 10,
+              padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6,
+              cursor: 'pointer', color: theme.text, fontSize: 13.5, fontWeight: 600
+            }}
+          >
+            <span style={{ fontSize: 14 }}>🔍</span> Search
+          </button>
           {sections.map(s => (
             <button
               key={s.key}
@@ -121,6 +133,19 @@ export default function Header({ theme, sections, section, setSection, dark, set
 
         {/* Mobile Right Controls */}
         <div className="header-hamburger" style={{ display: 'none', alignItems: 'center', gap: 8 }}>
+          {/* Mobile Search Button */}
+          <button
+            onClick={onOpenSearch}
+            style={{
+              background: 'none', border: theme.border, borderRadius: 8,
+              width: 36, height: 36, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', fontSize: 16,
+            }}
+            aria-label="Open Search"
+          >
+            🔍
+          </button>
           <button
             aria-label="Toggle dark mode"
             onClick={() => setDark(d => !d)}
