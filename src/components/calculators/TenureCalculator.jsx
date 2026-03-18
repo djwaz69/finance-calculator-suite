@@ -61,12 +61,6 @@ export default function TenureCalculator({ theme }) {
         const balances = [];
         const chartSchedule = [];
 
-        // Limit iteration to avoid browser hang on very long tenure errors
-        const maxMonths = 360 * 2; // 60 years cap
-
-        // Group by Year for the chart to avoid clutter
-        let yearlyData = [];
-
         for (let i = 1; i <= months; i++) {
             const intComp = balance * R;
             let princComp = E - intComp;
@@ -86,7 +80,6 @@ export default function TenureCalculator({ theme }) {
             if (i % 12 === 0 || i === months) {
                 labels.push(`Year ${(i / 12).toFixed(1)}`);
                 balances.push(balance);
-                yearlyData.push({ year: (i / 12).toFixed(1), balance });
             }
         }
         setSchedule(chartSchedule);
