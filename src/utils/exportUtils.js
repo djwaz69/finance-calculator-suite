@@ -54,18 +54,21 @@ export async function exportElementToPDF(domElement, fileName, buildSummaryPage)
     // Let the DOM repaint
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-    const canvas = await html2canvas(domElement, {
-        scale: 2,
-        backgroundColor: null,
-        useCORS: true,
-        logging: false,
-    });
-
-    // Restore styles
-    origStyles.forEach(item => {
-        item.el.style.maxHeight = item.maxHeight;
-        item.el.style.overflowY = item.overflowY;
-    });
+    let canvas;
+    try {
+        canvas = await html2canvas(domElement, {
+            scale: 2,
+            backgroundColor: null,
+            useCORS: true,
+            logging: false,
+        });
+    } finally {
+        // Always restore styles — even if html2canvas throws
+        origStyles.forEach(item => {
+            item.el.style.maxHeight = item.maxHeight;
+            item.el.style.overflowY = item.overflowY;
+        });
+    }
 
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();

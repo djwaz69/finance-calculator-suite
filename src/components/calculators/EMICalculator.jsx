@@ -48,18 +48,18 @@ export default function EMICalculator({ theme }) {
                     const valueX = pdfWidth / 2 + 20;
 
                     const details = [
-                        ['Loan Amount', `₹\${parseFloat(amount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`],
-                        ['Interest Rate', `\${parseFloat(roi)}% p.a.`],
-                        ['Tenure', `\${parseInt(tenure)} months (\${(parseInt(tenure) / 12).toFixed(1)} years)`],
-                        ['Monthly EMI', `₹\${Math.round(emi).toLocaleString('en-IN')}`],
-                        ['Total Interest', `₹\${Math.round(totalInterest).toLocaleString('en-IN')}`],
-                        ['Total Payable', `₹\${Math.round(totalPayable).toLocaleString('en-IN')}`],
+                        ['Loan Amount', `₹${parseFloat(amount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`],
+                        ['Interest Rate', `${parseFloat(roi)}% p.a.`],
+                        ['Tenure', `${parseInt(tenure)} months (${(parseInt(tenure) / 12).toFixed(1)} years)`],
+                        ['Monthly EMI', `₹${Math.round(emi).toLocaleString('en-IN')}`],
+                        ['Total Interest', `₹${Math.round(totalInterest).toLocaleString('en-IN')}`],
+                        ['Total Payable', `₹${Math.round(totalPayable).toLocaleString('en-IN')}`],
                     ];
 
                     let y = 188;
                     details.forEach(([label, value]) => {
                         pdf.setFont('helvetica', 'bold');
-                        pdf.text(`\${label}:`, labelX, y);
+                        pdf.text(`${label}:`, labelX, y);
                         pdf.setFont('helvetica', 'normal');
                         pdf.text(value, valueX, y);
                         y += 28;

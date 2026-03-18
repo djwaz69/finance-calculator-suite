@@ -146,7 +146,6 @@ export default function FDvsLoan({ theme }) {
         if (!result) return;
 
         const rows = [
-            { Metric: 'Metric', Value: 'Amount (₹)' },
             { Metric: 'Loan Interest Saved', Value: Math.round(result.interestSaved) },
             { Metric: 'FD Interest Earned', Value: Math.round(result.interestEarned) },
             { Metric: 'Net Benefit', Value: Math.round(Math.abs(result.diff)) + (result.diff > 0 ? ' (Prepayment)' : ' (Invest)') },

@@ -8,7 +8,7 @@ export function calculateEMIParams(principal, tenureMonths, rateAnnual) {
     const N = parseInt(tenureMonths);
     const R_annual = parseFloat(rateAnnual);
 
-    if (!P || !N) {
+    if (isNaN(P) || P <= 0 || isNaN(N) || N <= 0) {
         return { emi: null, schedule: [] };
     }
 
@@ -29,7 +29,7 @@ export function generateAmortizationSchedule(principal, tenureMonths, rateAnnual
     const N = parseInt(tenureMonths);
     const R = parseFloat(rateAnnual) / 12 / 100;
     
-    if (!P || !N || !emiVal) return [];
+    if (isNaN(P) || P <= 0 || isNaN(N) || N <= 0 || !emiVal) return [];
 
     let balance = P;
     const schedule = [];
@@ -209,7 +209,13 @@ export function calculateRetirement(age, P, T, R) {
     const r_monthly = R / 12 / 100;
 
     // PMT = P * r / [1 - (1+r)^-n]
-    let monthlyWithdrawal = (P * r_monthly) / (1 - Math.pow(1 + r_monthly, -months));
+    // Guard: when R = 0 the formula produces 0/0; fall back to simple equal division
+    let monthlyWithdrawal;
+    if (r_monthly === 0) {
+        monthlyWithdrawal = P / months;
+    } else {
+        monthlyWithdrawal = (P * r_monthly) / (1 - Math.pow(1 + r_monthly, -months));
+    }
 
     let labels = [];
     let dataPoints = [];

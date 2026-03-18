@@ -116,8 +116,9 @@ export default function FinancialAdvisor({ theme }) {
 
         // 10. FIRE corpus needed (25× annual expenses)
         const fireCorpus = expenses * 12 * 25;
-        const fireYears = surplus > 0 ? Math.ceil(
-            Math.log(1 + (fireCorpus * (0.12 / 12)) / (surplus * (equityPct / 100))) /
+        const equityInvestment = surplus * (equityPct / 100);
+        const fireYears = (surplus > 0 && equityInvestment > 0) ? Math.ceil(
+            Math.log(1 + (fireCorpus * (0.12 / 12)) / equityInvestment) /
             Math.log(1 + 0.12 / 12) / 12
         ) : null;
 

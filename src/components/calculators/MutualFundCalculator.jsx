@@ -163,7 +163,7 @@ export default function MutualFundCalculator({ theme }) {
         rows.push({});
         rows.push({ Note: 'Disclaimer', Value: 'This is for personal use only.' });
 
-        await exportDataToExcel(rows, `Financial_Calc_${mode.replace(' ', '')}.xlsx`, 'Report', 'json');
+        await exportDataToExcel(rows, `Financial_Calc_${mode.replace(/\s+/g, '')}.xlsx`, 'Report', 'json');
     }
 
     const options = React.useMemo(() => ({
