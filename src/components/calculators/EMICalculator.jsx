@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import logo from '../../assets/logo.jpg';
 import { calculateEMIParams, generateAmortizationSchedule } from '../../utils/financeUtils';
-import { exportElementToPDF, exportDataToExcel } from '../../utils/exportUtils';
+import { exportElementToPDF, exportDataToExcel, exportDataToPDF } from '../../utils/exportUtils';
 
 export default function EMICalculator({ theme }) {
     const [amount, setAmount] = useState('');
@@ -26,61 +26,68 @@ export default function EMICalculator({ theme }) {
     }
 
     async function exportToPDF() {
-        if (!emi || !exportRef.current) return;
+        if (!emi) return;
         setExporting(true);
         try {
-            await exportElementToPDF(
-                exportRef.current,
-                'EMI_Loan_Summary.pdf',
-                (pdf, pdfWidth, pdfHeight) => {
-                    const logoW = 100, logoH = 100;
-                    try {
-                        pdf.addImage(logo, 'JPEG', (pdfWidth - logoW) / 2, 32, logoW, logoH);
-                    } catch (_) { /* skip logo on error */ }
+            const capturedTotalInterest = totalInterest;
+            const capturedTotalPayable = totalPayable;
 
-                    pdf.setFontSize(24);
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.text('Loan EMI Summary', pdfWidth / 2, 158, { align: 'center' });
+            const summary = [
+                ['Loan Amount', `Rs. ${parseFloat(amount).toLocaleString('en-IN')}`],
+                ['Interest Rate', `${parseFloat(roi)}% p.a.`],
+                ['Tenure', `${parseInt(tenure)} months (${(parseInt(tenure) / 12).toFixed(1)} years)`],
+                ['Monthly EMI', `Rs. ${Math.round(emi).toLocaleString('en-IN')}`],
+                ['Total Interest', `Rs. ${Math.round(capturedTotalInterest).toLocaleString('en-IN')}`],
+                ['Total Payable', `Rs. ${Math.round(capturedTotalPayable).toLocaleString('en-IN')}`],
+            ];
 
-                    pdf.setFontSize(13);
-                    pdf.setFont('helvetica', 'normal');
-                    const labelX = pdfWidth / 2 - 100;
-                    const valueX = pdfWidth / 2 + 20;
+            const columns = ['Month', 'Opening Balance (Rs.)', 'EMI (Rs.)', 'Principal (Rs.)', 'Interest (Rs.)', 'Closing Balance (Rs.)'];
+            const rows = amortizationSchedule.map(({ month, principal, interest, balance }) => {
+                const closing = Math.round(balance);
+                const princ = Math.round(principal);
+                const opening = closing + princ;
+                return [
+                    month,
+                    opening.toLocaleString('en-IN'),
+                    Math.round(emi).toLocaleString('en-IN'),
+                    princ.toLocaleString('en-IN'),
+                    Math.round(interest).toLocaleString('en-IN'),
+                    closing.toLocaleString('en-IN')
+                ];
+            });
 
-                    const details = [
-                        ['Loan Amount', `₹\${parseFloat(amount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`],
-                        ['Interest Rate', `\${parseFloat(roi)}% p.a.`],
-                        ['Tenure', `\${parseInt(tenure)} months (\${(parseInt(tenure) / 12).toFixed(1)} years)`],
-                        ['Monthly EMI', `₹\${Math.round(emi).toLocaleString('en-IN')}`],
-                        ['Total Interest', `₹\${Math.round(totalInterest).toLocaleString('en-IN')}`],
-                        ['Total Payable', `₹\${Math.round(totalPayable).toLocaleString('en-IN')}`],
-                    ];
-
-                    let y = 188;
-                    details.forEach(([label, value]) => {
-                        pdf.setFont('helvetica', 'bold');
-                        pdf.text(`\${label}:`, labelX, y);
-                        pdf.setFont('helvetica', 'normal');
-                        pdf.text(value, valueX, y);
-                        y += 28;
-                    });
-                }
-            );
+            await exportDataToPDF(columns, rows, 'EMI_Loan_Summary.pdf', 'Loan EMI Summary', summary);
         } finally {
             setExporting(false);
         }
     }
 
     async function exportToExcel() {
+        if (!emi) return;
+        
+        // Formatted top summary
         const wsData = [
-            ['Month', 'EMI (₹)', 'Principal (₹)', 'Interest (₹)', 'Balance (₹)'],
-            ...amortizationSchedule.map(({ month, principal, interest, balance }) => [
-                month,
-                Math.round(emi),
-                Math.round(principal),
-                Math.round(interest),
-                Math.round(balance)
-            ]),
+            ['Loan Amount', parseFloat(amount)],
+            ['Interest Rate (% p.a.)', parseFloat(roi)],
+            ['Tenure (Months)', parseInt(tenure)],
+            ['Monthly EMI', Math.round(emi)],
+            ['Total Interest', Math.round(totalInterest)],
+            ['Total Payable', Math.round(totalPayable)],
+            [], // empty row for spacing
+            ['Month', 'Opening Balance (Rs.)', 'EMI (Rs.)', 'Principal (Rs.)', 'Interest (Rs.)', 'Closing Balance (Rs.)'],
+            ...amortizationSchedule.map(({ month, principal, interest, balance }) => {
+                const closing = Math.round(balance);
+                const princ = Math.round(principal);
+                const opening = closing + princ;
+                return [
+                    month,
+                    opening,
+                    Math.round(emi),
+                    princ,
+                    Math.round(interest),
+                    closing
+                ];
+            }),
             [],
             ['Disclaimer', 'This is for personal use only.']
         ];
@@ -239,25 +246,32 @@ export default function EMICalculator({ theme }) {
                             <thead style={{ position: 'sticky', top: 0, background: theme.card, zIndex: 1 }}>
                                 <tr style={{ borderBottom: `2px solid ${theme.accent}` }}>
                                     <th style={{ padding: '10px 10px', textAlign: 'center', fontWeight: 700 }}>Month</th>
+                                    <th style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 700 }}>Opening (₹)</th>
                                     <th style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 700 }}>EMI (₹)</th>
                                     <th style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 700 }}>Principal (₹)</th>
                                     <th style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 700 }}>Interest (₹)</th>
-                                    <th style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 700 }}>Balance (₹)</th>
+                                    <th style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 700 }}>Closing (₹)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {amortizationSchedule.map(({ month, principal, interest, balance }, idx) => (
-                                    <tr key={month} style={{
-                                        borderBottom: `1px solid rgba(128,128,128,0.1)`,
-                                        background: idx % 2 === 0 ? 'transparent' : 'rgba(128,128,128,0.04)',
-                                    }}>
-                                        <td style={{ padding: '8px 10px', textAlign: 'center' }}>{month}</td>
-                                        <td style={{ padding: '8px 10px', textAlign: 'right' }}>{Math.round(emi).toLocaleString('en-IN')}</td>
-                                        <td style={{ padding: '8px 10px', textAlign: 'right', color: theme.accent }}>{Math.round(principal).toLocaleString('en-IN')}</td>
-                                        <td style={{ padding: '8px 10px', textAlign: 'right', color: theme.accent2 }}>{Math.round(interest).toLocaleString('en-IN')}</td>
-                                        <td style={{ padding: '8px 10px', textAlign: 'right' }}>{Math.round(balance).toLocaleString('en-IN')}</td>
-                                    </tr>
-                                ))}
+                                {amortizationSchedule.map(({ month, principal, interest, balance }, idx) => {
+                                    const closing = Math.round(balance);
+                                    const princ = Math.round(principal);
+                                    const opening = closing + princ;
+                                    return (
+                                        <tr key={month} style={{
+                                            borderBottom: `1px solid rgba(128,128,128,0.1)`,
+                                            background: idx % 2 === 0 ? 'transparent' : 'rgba(128,128,128,0.04)',
+                                        }}>
+                                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{month}</td>
+                                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{opening.toLocaleString('en-IN')}</td>
+                                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{Math.round(emi).toLocaleString('en-IN')}</td>
+                                            <td style={{ padding: '8px 10px', textAlign: 'right', color: theme.accent }}>{princ.toLocaleString('en-IN')}</td>
+                                            <td style={{ padding: '8px 10px', textAlign: 'right', color: theme.accent2 }}>{Math.round(interest).toLocaleString('en-IN')}</td>
+                                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>{closing.toLocaleString('en-IN')}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -293,13 +307,6 @@ export default function EMICalculator({ theme }) {
                     </button>
                 </div>
             )}
-
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-        </div>
-    );
-}
+    </div>
+  );
+} // Ensure valid closure if messed up, but replace is safe

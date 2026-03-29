@@ -8,7 +8,7 @@ export function calculateEMIParams(principal, tenureMonths, rateAnnual) {
     const N = parseInt(tenureMonths);
     const R_annual = parseFloat(rateAnnual);
 
-    if (!P || !N) {
+    if (P <= 0 || N <= 0 || isNaN(P) || isNaN(N)) {
         return { emi: null, schedule: [] };
     }
 
@@ -77,6 +77,11 @@ export function getAmortizationStats(principal, ratePerMonth, emi) {
         totalInt += int;
         months++;
     }
+    
+    if (months >= 600) {
+        return { totalInterest: null, tenureMonths: null, error: 'Loan cannot be repaid within 50 years at this EMI.' };
+    }
+
     return { totalInterest: totalInt, tenureMonths: months };
 }
 
@@ -181,13 +186,22 @@ export function calculateSWP(P, T, R, W) {
 
         scheduleData.push({ month: i, withdrawn: totalWithdrawn, value: currentBalance });
 
+        // Push data points for chart
         if (i % 12 === 0 || i === months || currentBalance === 0) {
             if (labels.length === 0 || labels[labels.length - 1] !== `Yr ${Math.ceil(i / 12)}`) {
                 labels.push(`Yr ${Math.ceil(i / 12)}`);
                 dataPoints.push({ withdrawn: totalWithdrawn, value: currentBalance });
             }
         }
-        if (currentBalance === 0) break;
+        
+        if (currentBalance === 0) {
+             // Make sure final 0 point is recorded
+             if (labels[labels.length - 1] !== `Yr ${Math.ceil(i / 12)}`) {
+                 labels.push(`Yr ${Math.ceil(i / 12)}`);
+                 dataPoints.push({ withdrawn: totalWithdrawn, value: 0 });
+             }
+             break;
+        }
     }
 
     if (fundsLasted) extraText = "Funds lasted: Full Tenure";
@@ -207,6 +221,16 @@ export function calculateSWP(P, T, R, W) {
 export function calculateRetirement(age, P, T, R) {
     const months = T * 12;
     const r_monthly = R / 12 / 100;
+
+    if (months <= 0) {
+        return {
+            totalInv: P,
+            finalValue: 0,
+            profit: 0,
+            labels: [],
+            dataPoints: []
+        };
+    }
 
     // PMT = P * r / [1 - (1+r)^-n]
     let monthlyWithdrawal = (P * r_monthly) / (1 - Math.pow(1 + r_monthly, -months));

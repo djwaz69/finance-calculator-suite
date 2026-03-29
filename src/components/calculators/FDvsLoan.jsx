@@ -96,10 +96,10 @@ export default function FDvsLoan({ theme }) {
         const loanSavingsData = [];
         const fdEarningsData = [];
 
-        // Plot yearly points for readability
+        // Plot yearly points for readability, starting from year 1
         const years = Math.ceil(tenureOld / 12);
 
-        for (let y = 0; y <= years; y++) {
+        for (let y = 1; y <= years; y++) {
             const months = y * 12;
             labels.push(`Year ${y}`);
 
@@ -273,12 +273,6 @@ export default function FDvsLoan({ theme }) {
                     <div style={{ fontSize: 12, marginTop: 16, opacity: 0.6 }}>This is for personal use only.</div>
                 </div>
             )}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-        </div>
-    );
-}
+    </div>
+  );
+} // Ensure valid closure if messed up, but replace is safe

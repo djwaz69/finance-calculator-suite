@@ -14,8 +14,8 @@ function fmt(n) {
 }
 
 function fmtLakh(n) {
-    if (n >= 10000000) return (n / 10000000).toFixed(1) + ' Cr';
-    if (n >= 100000) return (n / 100000).toFixed(1) + ' L';
+    if (n >= 10000000) return '₹' + (n / 10000000).toFixed(1) + ' Cr';
+    if (n >= 100000) return '₹' + (n / 100000).toFixed(1) + ' L';
     return '₹' + Math.round(n).toLocaleString('en-IN');
 }
 
@@ -116,10 +116,13 @@ export default function FinancialAdvisor({ theme }) {
 
         // 10. FIRE corpus needed (25× annual expenses)
         const fireCorpus = expenses * 12 * 25;
-        const fireYears = surplus > 0 ? Math.ceil(
-            Math.log(1 + (fireCorpus * (0.12 / 12)) / (surplus * (equityPct / 100))) /
-            Math.log(1 + 0.12 / 12) / 12
-        ) : null;
+        let fireYears = null;
+        if (surplus > 0) {
+            const rawYears = Math.log(1 + (fireCorpus * (0.12 / 12)) / (surplus * (equityPct / 100))) / (Math.log(1 + 0.12 / 12) / 12);
+            if (isFinite(rawYears) && rawYears > 0) {
+                fireYears = Math.ceil(rawYears);
+            }
+        }
 
         setPlan({
             age, income, expenses, dependents,
@@ -520,13 +523,6 @@ export default function FinancialAdvisor({ theme }) {
                     </div>
                 </div>
             )}
-
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(12px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-        </div>
-    );
-}
+    </div>
+  );
+} // Ensure valid closure if messed up, but replace is safe

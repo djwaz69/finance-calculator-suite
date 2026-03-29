@@ -1,6 +1,6 @@
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open('wasim-tools-v1').then(cache => {
+    caches.open('wasim-tools-v2').then(cache => {
       return cache.addAll([
         '/',
         '/index.html',
@@ -11,6 +11,17 @@ self.addEventListener('install', event => {
     })
   );
 });
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.filter(name => name !== 'wasim-tools-v2').map(name => caches.delete(name))
+      );
+    })
+  );
+});
+
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(response => {

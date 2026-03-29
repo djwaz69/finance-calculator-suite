@@ -157,7 +157,8 @@ export default function MutualFundCalculator({ theme }) {
         if (schedule.length > 0) {
             rows = schedule.map(d => ({ ...d }));
         } else {
-            rows = [{ Metric: 'Result', Value: result.finalValue }];
+            const exportValue = mode === MODES.RETIREMENT ? result.profit : result.finalValue;
+            rows = [{ Metric: 'Result', Value: exportValue }];
         }
 
         rows.push({});
@@ -358,7 +359,6 @@ export default function MutualFundCalculator({ theme }) {
                     <div style={{ fontSize: 12, marginTop: 16, opacity: 0.6 }}>This is for personal use only.</div>
                 </div>
             )}
-            <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-        </div>
-    );
-}
+    </div>
+  );
+} // Ensure valid closure if messed up, but replace is safe
